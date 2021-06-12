@@ -1,5 +1,5 @@
-secret_key = "EnterYourApiSecretKeyHere"
-public_key = "EnterYourApiPublicKeyHere"
+secret_key = ''								#Enter your secret API key here
+public_key = ''								#Enter your public API key here
 
-
-BASE_CURR = "EnterYourPreferredBaseCurrencyHere"
+	
+BASE_CURR = ""								#Enter your base currency here

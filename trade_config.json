@@ -1,0 +1,18 @@
+{
+	"symbol" : "MATICUSDT", 
+	"resource_percent" : 50,
+	"base_log_path" : "D:/CryptoBot/LOGS",
+	"granularity" : "5m",
+	"limit" : 200,
+	"signal_mode" : "MACD",
+	"args" : {
+				"short_ema_len" : 26,
+				"long_ema_len" : 12,
+				"signal_len" : 9
+							} ,
+	"run_mode" : "Paper",
+	"target" : 10,
+	"stop" : 10,
+	"trail" : 10,
+	"run_interval" : 60
+}

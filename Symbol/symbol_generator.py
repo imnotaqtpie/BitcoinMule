@@ -8,10 +8,10 @@ class SymbolGenerator:
 	def __init__(self, symbol, logger):
 		self._symbol = symbol
 		self._symbol_details = self.get_symbol_details()
+		self._logger = logger
 		if self._symbol_details == None:
 			raise Exception("SymbolGeneratorException")
-		self._logger = logger
-
+		
 	def validate_symbol(self):
 		url = URL.get_market_url()
 		market_names = Utils.process_requests(url)

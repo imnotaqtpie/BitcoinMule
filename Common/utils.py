@@ -39,7 +39,7 @@ class Utils:
 	@staticmethod
 	def post_request(url, body, header):
 		response = requests.post(url, data = body, headers = header).json()
-		if "code" in response:
+		if "code" in response and response["code"] > 300:
 			print(f"Code : {response['code']} | Status : {response['status']} | Message : {response['message']}")
 			return None
 		if response == None:

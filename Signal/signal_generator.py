@@ -5,6 +5,18 @@ import math
 import numpy as np
 import pandas as pd
 
+import matplotlib.pyplot as plt
+from Common.utils import Utils
+
+from Symbol.symbol_generator import SymbolGenerator
+
+from Data.data_generator import DataGenerator
+
+from Indicators.macd import MACD
+from Indicators.bollinger import BollingerBands
+from Indicators.super_trend import SuperTrend 
+from Indicators.ema import EMA
+
 class SignalGenerator:
 	def __init__(self):
 		self._signal_ready = False
@@ -12,51 +24,52 @@ class SignalGenerator:
 		self._exit_flag_buy = False
 		self._exit_flag_sell = False
 
-	def get_bollinger_bands(self, data, w, sd_entry, sd_exit):
-		arr = data['open']
-		df = pd.Series(arr)
-		ma = df.rolling(w).mean()
-		msd = df.rolling(w).std()
+	def generate_signal(self, data, mode, price, signal_stats):
+		#Use the Indicator class and get variable objects
+		if mode == 'BOLLINGER':
+			try:
+				signals = BollingerBands.get_bollinger_bands(data, signal_stats['w'], signal_stats['sd'])
+			except Exception as e:
+				raise e
+			if price <= signals['bollinger_low'][-1]:
+				self._current_signal = -1
+			elif price >= signals['bollinger_high'][-1]:
+				self._current_signal = 1
+			else:
+				self._current_signal = 0
 
-		bollinger_high = ma + (msd * sd_entry)
-		bollinger_low = ma - (msd * sd_entry)
-		bollinger_high_high = ma + (msd * (sd_exit))
-		bollinger_low_low = ma - (msd * (sd_entry))
+		elif mode == 'MACD':
+			try:
+				signals = MACD.get_macd_signal(data, signal_stats['short_ema_len'], signal_stats['long_ema_len'], signal_stats['signal_len'])
+			except Exception as e:
+				raise e
 
-		bollinger_high = list(bollinger_high.dropna().values)
-		bollinger_low = list(bollinger_low.dropna().values)
-		bollinger_high_high = list(bollinger_high_high.dropna().values)
-		bollinger_low_low = list(bollinger_low_low.dropna().values)
-		l = len(bollinger_high)
+			#print(signals['MACD'][0], signals['MACD'][-1], signals['SIGNAL'][0], signals['SIGNAL'][-1])
+			if signals['MACD'][-1] > signals['SIGNAL'][-1]:
+				self._current_signal = 1
+			elif signals['MACD'][-1] < signals['SIGNAL'][-1]:
+				self._current_signal = -1
+			else:
+				self._current_signal = 0
+		elif mode == 'SUPER':
+			try:
+				super_1 = SuperTrend.get_supertrend(data, 12, 3)['super_trend']
+				super_2 = SuperTrend.get_supertrend(data, 10, 1)['super_trend']
+				super_3 = SuperTrend.get_supertrend(data, 11, 2)['super_trend']
+				ema = EMA.get_ema(data, 50)['ema']
+			except Exception as e:
+				raise e
 
-		for i in range(len(arr) - l):
-			bollinger_high.insert(0,0)
-			bollinger_low.insert(0,0)
-			bollinger_high_high.insert(0,0)
-			bollinger_low_low.insert(0,0)
+			sup1 = 1 if super_1[-1] <= price else -1
+			sup2 = 1 if super_2[-1] <= price else -1
+			sup3 = 1 if super_3[-1] <= price else -1
 
-		self._bollinger_high = bollinger_high
-		self._bollinger_low = bollinger_low
-		self._bollinger_high_high = bollinger_high_high
-		self._bollinger_low_low = bollinger_low_low
+			sup = sup1 + sup2 + sup3
 
-		self._signal_ready = True
-
-	def generate_signal(self, data, w, sd_entry, sd_exit, price):
-		try:
-			self.get_bollinger_bands(data, w, sd_entry, sd_exit)
-		except Exception as e:
-			raise e
-
-
-		if price <= self._bollinger_low[-1]:
-			self._current_signal = 1
-		elif price >= self._bollinger_high[-1]:
-			self._current_signal = -1
-		else:
-			self._current_signal = 0
-
-		#if price <= self._bollinger_low_low[-1]:
-		#	self._exit_flag_buy = True
-		#elif price >= self._bollinger_high_high[-1]:
-		#	self._exit_flag_sell = True
+			if (sup == 3) and (price > ema[-1]):
+				self._current_signal = 1
+			elif (sup == -3) and (price < ema[-1]):
+				self._current_signal = -1
+			else:
+				self._current_signal = 0
+			

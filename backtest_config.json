@@ -1,0 +1,19 @@
+{
+	"symbol" : "ETHUSDT", 
+	"data_path" : "D:/CryptoBot/ETH_OHLCVT",
+	"log_path" : "D:/CryptoBot/SIM_LOGS",
+	"granularity" : 5,
+	"start_time" : "01-01-2021",
+	"stop_time" : "01-04-2021",
+	"signal_mode" : "MACD",
+	"args" : {
+				"short_ema_len" : 26,
+				"long_ema_len" : 12,
+				"signal_len" : 9
+							} ,
+	"target" : 10,
+	"stop" : 10,
+	"trail" : 10,
+	"portfolio_stop" : 50,
+	"initial_resource" : 1000
+}

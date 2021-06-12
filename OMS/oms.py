@@ -4,31 +4,65 @@ from Common.urls import URL
 from Symbol.symbol_generator import SymbolGenerator
 
 class OMS:
-	def __init__(self, symbol, log_path):
+	def __init__(self, symbol, trade_logger, info_logger):
 		self._default_order_type = 'market_order'
 		self._symbol = symbol
-		self._logger = Utils.setup_logger(log_path)
+		self._trade_logger = trade_logger
+		self._info_logger = info_logger
 
-	def place_order_live(self, side, quantity):
-		if quantity == 0:
-			print('Insufficient funds!')
-			return
+	def log_trade(self, trade_details):
+		self._trade_logger.info(trade_details)
 
-		market_name = self._symbol._symbol
-		order_type = self._default_order_type
+	def place_order_live(self, pair, qty, side, price, stop_price, leverage=1.0, order_type="limit_order"):
+
+		timestamp = Utils.get_timestamp()
+		body = {
+		  "side": side,
+		  "order_type": order_type,
+		  "market": pair,
+		  "price": price,
+		  "quantity": qty,
+		  "ecode": 'B',
+		  "leverage": leverage,
+		  "trailing_sl" : True,
+		  "trail_percent" : 2,
+		  "stop_price" : stop_price,
+		  "timestamp": timestamp
+		}
+
+		json_body, headers = Utils.generate_signature(body)
+		url = URL.place_margin_order_url()
+		response = Utils.post_request(url, json_body, headers)
+		self._trade_logger.info(f"NEW ORDER : {response}")
+		return response
+
+	def cancel_order_live(self, uid):
 		timestamp = Utils.get_timestamp()
 
 		body = {
-			"side" : side,
-			"order_type" : order_type,
-			"total_quantity" : quantity,
+			"id" : uid,
+			"timestamp" : timestamp
+		}		
+
+		json_body, headers = Utils.generate_signature(body)
+		url = URL.get_cancel_order_url()
+		response = Utils.post_request(url, json_body, headers)
+		self._trade_logger.info(f"CANCEL ORDER : id : {uid} | {response}")
+		return response
+
+	def exit_order_live(self, uid):
+		timestamp = Utils.get_timestamp()
+
+		body = {
+			"id" : uid,
 			"timestamp" : timestamp
 		}
 
 		json_body, headers = Utils.generate_signature(body)
-		url = URL.get_send_order_url()
-		order_stats = Utils.post_request(url, json_body, headers)
-		return True
+		url = URL.get_exit_order_url()
+		response = Utils.post_request(url, json_body, headers)
+		self._trade_logger.info(f"EXIT ORDER : id : {uid} | {response}")
+		return response
 
 	def place_order_paper(self, side, quantity, price):
 		if quantity == 0:
@@ -38,14 +72,16 @@ class OMS:
 		timestamp = Utils.get_timestamp()
 		try:
 			response = {"side" : side,
-					"timestamp" : timestamp, 
-					"id" : 0, 
-					"fee_amount" : price * quantity * 0.001,
-					"avg_price" : price,
-					"turnover" : price * quantity,
-					"quantity" : quantity,
-					"status" : "TRADE_CONFIRM"}
-		except:
+						"timestamp" : timestamp, 
+						"id" : 0, 
+						"fee_amount" : price * quantity * 0.001,
+						"avg_entry" : price,
+						"turnover" : price * quantity,
+						"quantity" : quantity,
+						"status" : "open"}
+		except Exception as e:
+			self._info_logger.error(e)
 			return None
-		self._logger.info(response)
+			
+		self._trade_logger.info(response)
 		return response

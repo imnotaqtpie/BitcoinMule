@@ -32,3 +32,19 @@ class URL:
 	@staticmethod
 	def get_ltp_url():
 		return f"{BASE_URL}/exchange/ticker"
+
+	@staticmethod
+	def place_margin_order_url():
+		return f"{BASE_URL}/exchange/v1/margin/create"
+		
+	@staticmethod
+	def get_order_status_url():
+		return f"{BASE_URL}/exchange/v1/margin/order"
+
+	@staticmethod
+	def get_cancel_order_url():
+		return f"{BASE_URL}/exchange/v1/margin/cancel"
+
+	@staticmethod
+	def get_exit_order_url():
+		return f"{BASE_URL}/exchange/v1/margin/exit"
