@@ -4,7 +4,7 @@ BitcoinMule is an algo-trading bot to trade cryptocurrency pairs on the coinDCX 
 
 ## Installation
 
-Fork to local machine and add to your pythonpath. Will be adding an installation functionality when possible.
+Fork to local machine and add the folder to your pythonpath. Will be adding an installation functionality when possible.
 
 ## Usage
 
